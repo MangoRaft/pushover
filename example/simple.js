@@ -1,12 +1,25 @@
 var pushover = require('../');
+var ProgressBar = require('progress');
 var repos = pushover('/tmp/repos');
 
 repos.on('push', function(push) {
+	//console.log(push)
 	console.log('push ' + push.repo + '/' + push.commit + ' (' + push.branch + ')');
-	push.accept();
-	push.once('sideband', function(sideband) {
-		sideband.write('sadasdasdsdad\n');
-		sideband.end('sadasdasdsdad\n');
+
+	push.sideband().accept().once('sideband', function(sideband) {
+		
+				sideband.write('\ncomplete\n');
+		var bar = new ProgressBar(':bar', {
+			total : 10,
+			stream : sideband
+		});
+		var timer = setInterval(function() {
+			bar.tick();
+			if (bar.complete) {
+				sideband.end('\ncomplete\n');
+				clearInterval(timer);
+			}
+		}, 100);
 	});
 
 });
